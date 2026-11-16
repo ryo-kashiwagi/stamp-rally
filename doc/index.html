@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QRコードスタンプラリー</title>
+
+    <!-- QRコード読み取りライブラリ -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: #2196F3;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        #reader {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .stamp-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stamp {
+            height: 150px;
+            width: 150px;
+            background: white;
+            border: 2px dashed #999;
+            border-radius: 10px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 20px;
+            font-weight: bold;
+            color: #999;
+        }
+
+        .stamp.get {}
+
+        #message {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            background: #f44336;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>壱岐 デジタル御朱印</h1>
+</header>
+
+<div class="container">
+
+    <h2>QRコードを読み取ってスタンプを集めよう！</h2>
+
+    <!-- QRコード読み取り画面 -->
+    <div id="reader"></div>
+
+    <!-- スタンプ -->
+    <div class="stamp-area">
+
+        <div class="stamp" id="stamp1">
+            スタンプ1
+        </div>
+
+        <div class="stamp" id="stamp2">
+            スタンプ2
+        </div>
+
+        <div class="stamp" id="stamp3">
+            スタンプ3
+        </div>
+
+        <div class="stamp" id="stamp4">
+            スタンプ4
+        </div>
+
+        <div class="stamp" id="stamp5">
+            スタンプ5
+        </div>
+
+        <div class="stamp" id="stamp6">
+            スタンプ6
+        </div>
+
+    </div>
+
+    <div id="message">
+        スタンプを集めよう！
+    </div>
+
+    <button onclick="resetStamp()">
+        スタンプをリセット
+    </button>
+
+</div>
+
+
+<script>
+
+    // スタンプの総数
+    const totalStamps = 6;
+
+    // 保存されているスタンプを取得
+    let stamps = JSON.parse(
+        localStorage.getItem("stamps")
+    ) || [];
+
+
+    // スタンプ表示を更新
+    function updateStamps() {
+
+        for (let i = 1; i <= totalStamps; i++) {
+
+            const stamp = document.getElementById(
+                "stamp" + i
+            );
+
+            if (stamps.includes(i)) {
+
+                stamp.classList.add("get");
+
+                // const newimg = document.createElement('img');
+                // newimg.src = "stamp" + i + ".png";
+                // stamp.textContent =
+                //     "GET！";
+
+                stamp.textContent = "";
+                const stampi = document.getElementById("stamp"+i);
+                stampi.style.backgroundImage = "url(\"stamp" + i + ".png\")";
+                stampi.style.backgroundSize = "100%";
+                
+                stamp.append(newimg);
+
+            } else {
+
+                stamp.classList.remove("get");
+
+                stamp.textContent =
+                    "スタンプ" + i;
+            }
+        }
+
+
+        // 全部集めた場合
+        if (stamps.length === totalStamps) {
+
+            document.getElementById(
+                "message"
+            ).textContent =
+                "🎉 コンプリート！おめでとう！ 🎉";
+
+        } else {
+
+            document.getElementById(
+                "message"
+            ).textContent =
+                "現在 " +
+                stamps.length +
+                " / " +
+                totalStamps +
+                " 個獲得！";
+        }
+    }
+
+    
+    // QRコードリーダー開始
+    const html5QrCode =
+        new Html5QrcodeScanner(
+            "reader",
+            {
+                fps: 5,
+                qrbox: 250,
+                videoConstraints: {
+                    facingMode: "environment" 
+                }
+            }
+        );
+
+
+    // QRコード読み取り成功
+    function onScanSuccess(decodedText) {
+
+        /*
+            QRコードに
+
+            stamp1
+            stamp2
+            stamp3
+
+            のような文字を登録する
+        */
+
+        if (
+            decodedText.startsWith("stamp")
+        ) {
+
+            const stampNumber =
+                parseInt(
+                    decodedText.replace(
+                        "stamp",
+                        ""
+                    )
+                );
+
+
+            // 正しい番号か確認
+            if (
+                stampNumber >= 1 &&
+                stampNumber <= totalStamps
+            ) {
+
+                // 未取得の場合
+                if (
+                    !stamps.includes(
+                        stampNumber
+                    )
+                ) {
+
+                    stamps.push(
+                        stampNumber
+                    );
+
+                    // 保存
+                    localStorage.setItem(
+                        "stamps",
+                        JSON.stringify(
+                            stamps
+                        )
+                    );
+
+                    alert(
+                        "スタンプ" +
+                        stampNumber +
+                        "を獲得しました！"
+                    );
+
+                    updateStamps();
+
+                } else {
+
+                    alert(
+                        "このスタンプは既に取得済みです！"
+                    );
+                }
+
+            } else {
+
+                alert(
+                    "無効なQRコードです"
+                );
+            }
+
+        } else {
+
+            alert(
+                "スタンプラリー用のQRコードではありません"
+            );
+        }
+    }
+
+
+    // QRコード読み取りエラー
+    function onScanFailure(error) {
+
+        // 読み取り中のエラーは頻繁に発生するため
+        // 特に処理しない
+    }
+
+
+
+    html5QrCode.render(
+        onScanSuccess,
+        onScanFailure
+    );
+
+
+    // スタンプリセット
+    function resetStamp() {
+
+        const result =
+            confirm(
+                "本当にスタンプをリセットしますか？"
+            );
+
+        if (result) {
+
+            stamps = [];
+
+            localStorage.removeItem(
+                "stamps"
+            );
+
+            updateStamps();
+        }
+    }
+
+
+    // 初期表示
+    updateStamps();
+
+</script>
+
+</body>
+</html>
